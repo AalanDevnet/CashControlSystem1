@@ -1,0 +1,75 @@
+﻿@model IEnumerable<CashControlSystem.Models.TransactionViewModel>
+
+@{
+    ViewBag.Title = "Transaction List";
+}
+
+@section scripts {
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css">
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.dataTables.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.print.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#transactionTable').DataTable({
+                scrollY: 'calc(100vh - 200px)',
+                scrollX: true,
+                scrollCollapse: true,
+                paging: false,
+                fixedColumns: true,
+                responsive: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    'copy', 'csv', 'excel', 'pdf', 'print'
+                ]
+            });
+        });
+    </script>
+}
+
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">All Transactions</h3>
+            </div>
+            <div class="card-body" style="height: calc(100vh - 150px); overflow-y: auto;">
+                <div class="table-responsive">
+                    <table id="transactionTable" class="stripe row-border order-column" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Customer Code</th>
+                                <th>Transaction Type</th>
+                                <th>Currency</th>
+                                <th>Amount</th>
+                                <th>Transaction Date Time</th>
+                                <th>Bank PIC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var transaction in Model)
+                            {
+                                <tr>
+                                    <td>@transaction.CustomerCode</td>
+                                    <td>@transaction.TransactionType</td>
+                                    <td>@transaction.Currency</td>
+                                    <td>@transaction.Amount</td>
+                                    <td>@transaction.TransactionDateTime</td>
+                                    <td>@transaction.BankPIC</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>

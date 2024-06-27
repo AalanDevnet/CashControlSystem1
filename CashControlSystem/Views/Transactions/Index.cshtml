@@ -20,7 +20,6 @@
                     <th>Amount</th>
                     <th>Transaction Date Time</th>
                     <th>Bank PIC</th>
-                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -35,15 +34,6 @@
                         <td>@item.Amount</td>
                         <td>@item.TransactionDateTime.ToString("yyyy-MM-dd HH:mm")</td>
                         <td>@item.BankPIC</td>
-                        <td>
-                            @Html.ActionLink("Edit", "Edit", new { id = item.No }, new { @class = "btn btn-primary btn-sm" })
-                            @Html.ActionLink("Details", "Details", new { id = item.No }, new { @class = "btn btn-info btn-sm" })
-                            @Html.ActionLink("Delete", "Delete", new { id = item.No }, new { @class = "btn btn-danger btn-sm" })
-                            <form action="@Url.Action("Deposit", "Transactions")" method="post" class="d-inline">
-                                @Html.Hidden("TransactionID", item.No)
-                                <button type="submit" class="btn btn-success btn-sm">Deposit</button>
-                            </form>
-                        </td>
                     </tr>
                 }
             </tbody>

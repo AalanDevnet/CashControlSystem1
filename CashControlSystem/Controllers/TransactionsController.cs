@@ -4,6 +4,8 @@ using CashControlSystem.Service;
 using System;
 using System.Web.Mvc;
 using System.Linq;
+using OfficeOpenXml;
+using System.IO;
 
 namespace CashControlSystem.Controllers
 {
@@ -36,33 +38,86 @@ namespace CashControlSystem.Controllers
             return View(transactionViewModels);
         }
 
+        // GET: Transactions/Deposit
+        public ActionResult Deposit()
+        {
+            int userId = (Session["User"] as User)?.UserId ?? 0;
+
+            Customer customer = _transactionRepository.GetCustomerByUserId(userId);
+
+            var transactionViewModel = new TransactionViewModel
+            {
+                CustomerCode = customer?.CustomerCode,
+            };
+
+            return View(transactionViewModel);
+        }
+
         [HttpPost]
-        public ActionResult Deposit(Transaction transaction)
+        [ValidateAntiForgeryToken]
+        public ActionResult Deposit(TransactionViewModel model)
         {
             if (ModelState.IsValid)
             {
-                try
+                int userId = (Session["User"] as User)?.UserId ?? 0;
+                Customer customer = _transactionRepository.GetCustomerByUserId(userId);
+
+                if (customer == null)
                 {
-                    var success = _transactionRepository.DepositTransaction(transaction);
-                    if (success)
+                    return Json(new { success = false, message = "Customer not found." });
+                }
+
+                var transaction = new Transaction
+                {
+                    CustomerID = customer.CustomerID,
+                    TransactionType = "Deposit",
+                    Currency = model.Currency,
+                    Amount = model.Amount,
+                    TransactionDateTime = DateTime.Now,
+                    BankPIC = model.BankPIC
+                };
+
+                bool depositSuccess = _transactionRepository.DepositTransaction(transaction);
+
+                if (depositSuccess)
+                {
+                    bool addToBalanceSuccess = _transactionRepository.AddToBalance(customer.CustomerID, model.Currency, model.Amount);
+
+                    if (addToBalanceSuccess)
                     {
-                        return Json(new { success = true, message = "Deposit transaction successful." });
+                        return Json(new { success = true, message = "Deposit and balance update successful." });
                     }
                     else
                     {
-                        return Json(new { success = false, message = "Failed to save deposit transaction." });
+                        return Json(new { success = false, message = "Failed to update balance." });
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    return Json(new { success = false, message = $"An error occurred: {ex.Message}" });
+                    return Json(new { success = false, message = "Failed to deposit transaction." });
                 }
             }
-            else
-            {
-                return Json(new { success = false, message = "Invalid input data. Please check your input." });
-            }
+
+            return Json(new { success = false, message = "Invalid input." });
         }
+
+        public ActionResult Report()
+        {
+            int userId = (Session["User"] as User)?.UserId ?? 0;
+
+            Customer customer = _transactionRepository.GetCustomerByUserId(userId);
+
+            var transactions = _transactionRepository.SearchDailyTransactions(
+                null,              
+                null,              
+                null,              
+                null,             
+                null               
+            );
+
+            return View(transactions);
+        }
+
 
         [HttpGet]
         public ActionResult SearchDailyTransactions(DateTime startDate, DateTime endDate, string transactionType, string currency, string customerCode)
@@ -78,20 +133,33 @@ namespace CashControlSystem.Controllers
             }
         }
 
-        [HttpGet]
-        public ActionResult ExportToExcel(DateTime startDate, DateTime endDate, string transactionType, string currency, string customerCode)
+        public ActionResult ExportToExcel()
         {
-            try
-            {
-                var transactions = _transactionRepository.SearchDailyTransactions(startDate, endDate, transactionType, currency, customerCode);
-                var fileContents = _excelExportService.ExportToExcel(transactions);
+            int userId = (Session["User"] as User)?.UserId ?? 0;
+            var customer = _transactionRepository.GetCustomerByUserId(userId);
 
-                return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Transactions.xlsx");
-            }
-            catch (Exception ex)
+            var transactions = _transactionRepository.SearchDailyTransactions(
+                null,  
+                null,  
+                null,  
+                null, 
+                customer?.CustomerCode  
+            );
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            using (var package = new ExcelPackage())
             {
-                // Log the exception or handle as needed
-                return Json(new { success = false, message = $"Failed to export transactions to Excel: {ex.Message}" });
+                var worksheet = package.Workbook.Worksheets.Add("Transactions");
+                worksheet.Cells["A1"].LoadFromCollection(transactions, true);
+
+                using (var stream = new MemoryStream())
+                {
+                    package.SaveAs(stream);
+                    string fileName = $"Transactions_{DateTime.Now.ToString("yyyyMMddHHmmss")}.xlsx";
+                    string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+                    return File(stream.ToArray(), contentType, fileName);
+                }
             }
         }
     }

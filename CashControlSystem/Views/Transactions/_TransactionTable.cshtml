@@ -1,0 +1,41 @@
+﻿@model IEnumerable<CashControlSystem.Models.TransactionViewModel>
+
+<table id="transactionTable" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>Customer Code</th>
+            <th>Transaction Type</th>
+            <th>Currency</th>
+            <th>Amount</th>
+            <th>Transaction Date Time</th>
+            <th>Bank PIC</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Any())
+        {
+            int count = 1;
+            foreach (var transaction in Model)
+            {
+                <tr>
+                    <td>@count</td>
+                    <td>@transaction.CustomerCode</td>
+                    <td>@transaction.TransactionType</td>
+                    <td>@transaction.Currency</td>
+                    <td>@transaction.Amount</td>
+                    <td>@transaction.TransactionDateTime</td>
+                    <td>@transaction.BankPIC</td>
+                </tr>
+                count++;
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="7">No transactions found.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+

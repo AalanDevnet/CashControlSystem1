@@ -10,9 +10,13 @@ namespace CashControlSystem.IRepo
     public interface ITransactionRepository
     {
         bool DepositTransaction(Transaction transaction);
-        IEnumerable<TransactionViewModel> SearchDailyTransactions(DateTime startDate, DateTime endDate, string transactionType, string currency, string customerCode);
+        IEnumerable<TransactionViewModel> SearchDailyTransactions(DateTime? startDate, DateTime? endDate, string transactionType, string currency, string customerCode);
         IEnumerable<TransactionViewModel> GenerateReport(DateTime startDate, DateTime endDate);
         List<TransactionViewModel> GetTransactions();
+        Customer GetCustomerByUserId(int userId);
+        bool AddToBalance(int customerId, string currency, decimal amount);
+
+
     }
 
 }

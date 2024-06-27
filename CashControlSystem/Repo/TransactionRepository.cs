@@ -37,12 +37,15 @@ namespace CashControlSystem.Repo
             }
         }
 
-        public IEnumerable<TransactionViewModel> SearchDailyTransactions(DateTime startDate, DateTime endDate, string transactionType, string currency, string customerCode)
+        public IEnumerable<TransactionViewModel> SearchDailyTransactions(DateTime? startDate, DateTime? endDate, string transactionType, string currency, string customerCode)
         {
             using (var db = _dbConnectionFactory.CreateConnection())
             {
+                var effectiveStartDate = startDate ?? new DateTime(1753, 1, 1);
+                var effectiveEndDate = endDate ?? DateTime.MaxValue;
+
                 string sql = "EXEC usp_SearchDailyTransactions @StartDate, @EndDate, @TransactionType, @Currency, @CustomerCode";
-                return db.Query<TransactionViewModel>(sql, new { startDate, endDate, transactionType, currency, customerCode });
+                return db.Query<TransactionViewModel>(sql, new { StartDate = effectiveStartDate, EndDate = effectiveEndDate, TransactionType = transactionType, Currency = currency, CustomerCode = customerCode });
             }
         }
 
@@ -62,6 +65,24 @@ namespace CashControlSystem.Repo
                 string sql = "EXEC usp_GetTransactionsWithCustomerInfo";
                 var transactions = db.Query<TransactionViewModel>(sql).ToList();
                 return transactions;
+            }
+        }
+
+        public Customer GetCustomerByUserId(int userId)
+        {
+            using (var db = _dbConnectionFactory.CreateConnection())
+            {
+                string sql = "SELECT * FROM Customers WHERE UserId = @UserId";
+                return db.QueryFirstOrDefault<Customer>(sql, new { UserId = userId });
+            }
+        }
+        public bool AddToBalance(int customerId, string currency, decimal amount)
+        {
+            using (var db = _dbConnectionFactory.CreateConnection())
+            {
+                string sql = "INSERT INTO Balance (CustomerId, Currency, Amount, TransactionDateTime) VALUES (@CustomerId, @Currency, @Amount, GETDATE())";
+                var result = db.Execute(sql, new { CustomerId = customerId, Currency = currency, Amount = amount });
+                return result > 0;
             }
         }
     }
