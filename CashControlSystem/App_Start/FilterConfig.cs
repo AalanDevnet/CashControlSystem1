@@ -1,5 +1,6 @@
 ﻿using System.Web;
 using System.Web.Mvc;
+using CashControlSystem.Helpers;
 
 namespace CashControlSystem
 {
@@ -8,6 +9,7 @@ namespace CashControlSystem
         public static void RegisterGlobalFilters(GlobalFilterCollection filters)
         {
             filters.Add(new HandleErrorAttribute());
+            filters.Add(new SessionCheckAttribute());
         }
     }
 }
